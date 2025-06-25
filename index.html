@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Saúde Total | Sistema de Agendamento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #0078d7;
+            --background: #fafafa;
+            --text: #333333;
+            --title: #004e89;
+            --active-button: #4a90e2;
+            --hover-button: #006fc0;
+            --borders: #e0e0e0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --admin-bg: #f5f7fa;
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--title), var(--primary));
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 50%;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 5px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        nav ul li a i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        nav ul li a.active {
+            background-color: var(--active-button);
+            color: white;
+        }
+
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .user-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            padding: 10px 0;
+            margin-top: 10px;
+            display: none;
+            z-index: 100;
+        }
+
+        .user-dropdown.show {
+            display: block;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .user-dropdown a:hover {
+            background: #f5f7fa;
+            color: var(--primary);
+        }
+
+        .user-dropdown a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Modal de Login */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            animation: modalFade 0.3s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--title), var(--primary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--borders);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--borders);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #fcfcfc;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.1);
+            background: white;
+        }
+
+        .form-footer {
+            margin-top: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 120, 215, 0.3);
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: var(--hover-button);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 120, 215, 0.4);
+        }
+
+        /* Seções */
+        section {
+            padding: 80px 0;
+            display: none;
+        }
+
+        section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            color: var(--title);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-header h2:after {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 4px;
+            background: var(--primary);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .section-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        /* Início */
+        #inicio {
+            background: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), 
+                        url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            color: var(--title);
+            margin-bottom: 20px;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            color: #444;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 14px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 120, 215, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .cta-btn:hover {
+            background: var(--hover-button);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 120, 215, 0.4);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Cards de serviços */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #eaeaea;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-img {
+            height: 180px;
+            background: linear-gradient(45deg, var(--primary), #4a90e2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .service-content {
+            padding: 25px;
+        }
+
+        .service-content h3 {
+            color: var(--title);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .service-content p {
+            color: #666;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .price {
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        /* Procedimentos */
+        .procedimento-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .select-container {
+            padding: 25px;
+            background: linear-gradient(to right, #f9f9f9, #f0f8ff);
+            border-bottom: 1px solid var(--borders);
+        }
+
+        .select-container select {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            font-size: 1.1rem;
+            background: white;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .select-container select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2);
+        }
+
+        .explicacao-content {
+            padding: 30px;
+            min-height: 300px;
+        }
+
+        .explicacao-content h3 {
+            color: var(--title);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .explicacao-content p {
+            margin-bottom: 25px;
+            line-height: 1.8;
+            color: #444;
+        }
+
+        .explicacao-imagens {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .explicacao-imagens img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+
+        /* Formulário de agendamento (estilo original) */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--primary), var(--title));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .form-header h3 {
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #fcfcfc;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.1);
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .price-display {
+            background: #e8f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+            color: var(--title);
+            display: none;
+            border-left: 4px solid var(--primary);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+        }
+
+        /* Sobre */
+        .about-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .about-image {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            height: 400px;
+            background: linear-gradient(45deg, var(--primary), #4a90e2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .about-content h3 {
+            color: var(--title);
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .about-content p {
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #444;
+        }
+
+        .contact-info {
+            margin-top: 30px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .contact-item i {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(to right, var(--title), var(--primary));
+            color: white;
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            position: relative;
+            color: white;
+        }
+
+        .footer-section h3:after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.5);
+            bottom: -10px;
+            left: 0;
+        }
+
+        .footer-links a {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-contact .contact-item {
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .footer-contact .contact-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: block;
+            }
+            
+            .user-menu {
+                position: static;
+            }
+            
+            .user-dropdown {
+                left: 0;
+                right: auto;
+                width: 100%;
+            }
+            
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--title);
+                box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+                flex-direction: column;
+                padding: 20px 0;
+            }
+            
+            nav ul.show {
+                display: flex;
+            }
+            
+            nav ul li {
+                margin: 5px 0;
+                width: 100%;
+                text-align: center;
+            }
+            
+            nav ul li a {
+                border-radius: 0;
+                padding: 12px;
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .about-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== ÁREA ADMINISTRATIVA ===== */
+        #admin {
+            background-color: var(--admin-bg);
+            min-height: 100vh;
+        }
+
+        .admin-panel {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            border: 1px solid #eaeaea;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--borders);
+        }
+
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--borders);
+            flex-wrap: wrap;
+        }
+
+        .admin-tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            color: #666;
+        }
+
+        .admin-tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .admin-content {
+            display: none;
+        }
+
+        .admin-content.active {
+            display: block;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-container input, .search-container select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            background: #fcfcfc;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .admin-table th, 
+        .admin-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--borders);
+        }
+
+        .admin-table th {
+            background-color: #f5f7fa;
+            font-weight: 600;
+            color: var(--title);
+            position: sticky;
+            top: 0;
+        }
+
+        .admin-table tr:hover {
+            background-color: #f9fafc;
+        }
+
+        .admin-table tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-pendente {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+
+        .status-confirmado {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-cancelado {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .action-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn i {
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            background-color: #e3f2fd;
+            color: var(--primary);
+        }
+
+        .delete-btn {
+            background-color: #ffebee;
+            color: var(--danger);
+            margin-left: 5px;
+        }
+
+        .admin-form {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fcfcfc;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--borders);
+        }
+
+        .form-title {
+            color: var(--title);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--borders);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-success {
+            background: var(--success);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        /* Responsividade da área admin */
+        @media (max-width: 992px) {
+            .about-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .about-image {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu -->
+    <header>
+        <div class="container">
+            <div class="menu">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Saúde Total</span>
+                </div>
+                <div class="mobile-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#" class="active" data-section="inicio"><i class="fas fa-home"></i> Início</a></li>
+                        <li><a href="#" data-section="consultas"><i class="fas fa-stethoscope"></i> Consultas</a></li>
+                        <li><a href="#" data-section="exames"><i class="fas fa-vial"></i> Exames</a></li>
+                        <li><a href="#" data-section="procedimentos"><i class="fas fa-info-circle"></i> Procedimentos</a></li>
+                        <li><a href="#" data-section="agendamento"><i class="fas fa-calendar-check"></i> Agendamento</a></li>
+                        <li><a href="#" data-section="sobre"><i class="fas fa-building"></i> Sobre</a></li>
+                        <li id="admin-nav-item" style="display: none;">
+                            <a href="#" data-section="admin"><i class="fas fa-cog"></i> Administração</a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <button class="user-btn" id="login-btn">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Login</span>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown" style="display: none;">
+                        <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modal de Login/Cadastro -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Acesso ao Sistema</h2>
+                <p>Faça login ou cadastre-se</p>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-tab="login">Login</div>
+                    <div class="auth-tab" data-tab="register">Cadastro</div>
+                </div>
+                
+                <form class="auth-form active" id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">E-mail</label>
+                        <input type="email" id="login-email" required placeholder="seu.email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Senha</label>
+                        <input type="password" id="login-password" required placeholder="Digite sua senha">
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn">Entrar</button>
+                    </div>
+                </form>
+                
+                <form class="auth-form" id="register-form">
+                    <div class="form-group">
+                        <label for="register-name">Nome Completo</label>
+                        <input type="text" id="register-name" required placeholder="Seu nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">E-mail</label>
+                        <input type="email" id="register-email" required placeholder="seu.email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Senha</label>
+                        <input type="password" id="register-password" required placeholder="Crie uma senha">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirme a Senha</label>
+                        <input type="password" id="register-confirm" required placeholder="Confirme sua senha">
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn">Cadastrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção Início -->
+    <section id="inicio" class="active">
+        <div class="container">
+            <div class="hero">
+                <h1>Cuidando da sua saúde com excelência</h1>
+                <p>Na Clínica Saúde Total, oferecemos atendimento médico de qualidade com profissionais altamente qualificados e tecnologia de ponta.</p>
+                <a href="#" class="cta-btn" data-section="agendamento">Agendar Consulta</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Consultas -->
+    <section id="consultas">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossas Consultas</h2>
+                <p>Oferecemos uma variedade de consultas especializadas para atender às suas necessidades de saúde.</p>
+            </div>
+            <div class="services-grid" id="consultas-container">
+                <!-- Consultas serão carregadas por JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Exames -->
+    <section id="exames">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossos Exames</h2>
+                <p>Realizamos exames com tecnologia de ponta para diagnósticos precisos e confiáveis.</p>
+            </div>
+            <div class="services-grid" id="exames-container">
+                <!-- Exames serão carregados por JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Procedimentos -->
+    <section id="procedimentos">
+        <div class="container">
+            <div class="section-header">
+                <h2>Explicação de Procedimentos</h2>
+                <p>Selecione um procedimento para obter informações detalhadas sobre como ele é realizado.</p>
+            </div>
+            <div class="procedimento-container">
+                <div class="select-container">
+                    <select id="procedimento-select">
+                        <option value="">Selecione um procedimento</option>
+                        <!-- Opções serão carregadas por JavaScript -->
+                    </select>
+                </div>
+                <div class="explicacao-content" id="explicacao-content">
+                    <p>Selecione um procedimento acima para visualizar sua explicação.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Agendamento -->
+    <section id="agendamento">
+        <div class="container">
+            <div class="section-header">
+                <h2>Agendamento</h2>
+                <p>Preencha o formulário abaixo para agendar sua consulta ou exame.</p>
+            </div>
+            <div class="form-container">
+                <div class="form-header">
+                    <h3>Agendar Consulta</h3>
+                </div>
+                <div class="form-body">
+                    <form id="agendamento-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">Nome Completo</label>
+                                <input type="text" id="nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nascimento">Data de Nascimento</label>
+                                <input type="date" id="nascimento" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="morada">Morada</label>
+                                <input type="text" id="morada" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone</label>
+                                <input type="tel" id="telefone" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="consulta">Consulta Desejada</label>
+                            <select id="consulta" required>
+                                <option value="">Selecione uma consulta</option>
+                                <!-- Opções serão carregadas por JavaScript -->
+                            </select>
+                            <div class="price-display" id="price-display">Preço: R$ <span id="preco">0.00</span></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="data">Data</label>
+                                <input type="date" id="data" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hora">Hora</label>
+                                <input type="time" id="hora" required min="08:00" max="18:00">
+                            </div>
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn">Agendar Consulta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Sobre -->
+    <section id="sobre">
+        <div class="container">
+            <div class="section-header">
+                <h2>Sobre Nós</h2>
+                <p>Conheça mais sobre a Clínica Saúde Total e nossa missão.</p>
+            </div>
+            <div class="about-container">
+                <div class="about-image">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="about-content">
+                    <h3>Clínica Saúde Total</h3>
+                    <p>Fundada em 2005, a Clínica Saúde Total tem como missão proporcionar atendimento médico de excelência, com foco no bem-estar e saúde integral de nossos pacientes.</p>
+                    <p>Nossa equipe é composta por profissionais altamente qualificados e comprometidos com o atendimento humanizado, utilizando tecnologia de ponta para diagnósticos precisos e tratamentos eficazes.</p>
+                    
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Av. Saúde, 1234 - Centro, Cidade - Estado</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>(11) 5555-1234</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contato@clinicasaudetotal.com.br</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>(11) 98765-4321</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Administração -->
+    <section id="admin">
+        <div class="container">
+            <div class="section-header">
+                <h2>Painel Administrativo</h2>
+                <p>Gerencie agendamentos, consultas, exames e procedimentos</p>
+            </div>
+            
+            <div class="admin-panel">
+                <div class="admin-header">
+                    <h3>Bem-vindo ao Painel de Controle</h3>
+                    <div id="admin-status">
+                        <i class="fas fa-circle" style="color: #4CAF50;"></i>
+                        <span>Sistema operacional</span>
+                    </div>
+                </div>
+                
+                <div class="admin-tabs">
+                    <div class="admin-tab active" data-tab="agendamentos">Agendamentos</div>
+                    <div class="admin-tab" data-tab="consultas">Consultas</div>
+                    <div class="admin-tab" data-tab="exames">Exames</div>
+                    <div class="admin-tab" data-tab="procedimentos">Procedimentos</div>
+                </div>
+                
+                <!-- Agendamentos -->
+                <div class="admin-content active" id="agendamentos-content">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Buscar por nome, telefone ou data...">
+                        <select id="status-filter">
+                            <option value="todos">Todos os status</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                        <button class="btn" id="search-btn">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Consulta</th>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agendamentos-table">
+                                <!-- Dados serão carregados por JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Consultas -->
+                <div class="admin-content" id="consultas-content">
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Preço (R$)</th>
+                                    <th>Descrição</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="consultas-admin-table">
+                                <!-- Dados serão carregados por JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="admin-form">
+                        <h3 class="form-title">Adicionar/Editar Consulta</h3>
+                        <input type="hidden" id="consulta-id">
+                        <div class="form-group">
+                            <label for="consulta-nome">Nome da Consulta</label>
+                            <input type="text" id="consulta-nome" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consulta-preco">Preço (R$)</label>
+                                <input type="number" id="consulta-preco" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consulta-desc">Descrição</label>
+                            <textarea id="consulta-desc" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn" id="salvar-consulta">
+                                <i class="fas fa-save"></i> Salvar Consulta
+                            </button>
+                            <button type="button" class="btn btn-danger" id="cancelar-consulta">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Exames -->
+                <div class="admin-content" id="exames-content">
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Preço (R$)</th>
+                                    <th>Descrição</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exames-admin-table">
+                                <!-- Dados serão carregados por JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="admin-form">
+                        <h3 class="form-title">Adicionar/Editar Exame</h3>
+                        <input type="hidden" id="exame-id">
+                        <div class="form-group">
+                            <label for="exame-nome">Nome do Exame</label>
+                            <input type="text" id="exame-nome" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="exame-preco">Preço (R$)</label>
+                                <input type="number" id="exame-preco" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exame-desc">Descrição</label>
+                            <textarea id="exame-desc" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn" id="salvar-exame">
+                                <i class="fas fa-save"></i> Salvar Exame
+                            </button>
+                            <button type="button" class="btn btn-danger" id="cancelar-exame">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Procedimentos -->
+                <div class="admin-content" id="procedimentos-content">
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Passos</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="procedimentos-admin-table">
+                                <!-- Dados serão carregados por JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="admin-form">
+                        <h3 class="form-title">Adicionar/Editar Procedimento</h3>
+                        <input type="hidden" id="procedimento-id">
+                        <div class="form-group">
+                            <label for="procedimento-nome">Nome do Procedimento</label>
+                            <input type="text" id="procedimento-nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="procedimento-desc">Descrição</label>
+                            <textarea id="procedimento-desc" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="procedimento-passos">Passos (um por linha)</label>
+                            <textarea id="procedimento-passos" rows="5" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn" id="salvar-procedimento">
+                                <i class="fas fa-save"></i> Salvar Procedimento
+                            </button>
+                            <button type="button" class="btn btn-danger" id="cancelar-procedimento">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Clínica Saúde Total</h3>
+                    <p>Oferecendo atendimento médico de qualidade desde 2005. Comprometidos com sua saúde e bem-estar.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Links Rápidos</h3>
+                    <div class="footer-links">
+                        <a href="#" data-section="inicio">Início</a>
+                        <a href="#" data-section="consultas">Consultas</a>
+                        <a href="#" data-section="exames">Exames</a>
+                        <a href="#" data-section="procedimentos">Procedimentos</a>
+                        <a href="#" data-section="agendamento">Agendamento</a>
+                        <a href="#" data-section="sobre">Sobre</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contato</h3>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Av. Saúde, 1234 - Centro</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>(11) 5555-1234</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>(11) 98765-4321</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contato@clinicasaudetotal.com.br</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 Clínica Saúde Total. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Banco de dados simulado usando localStorage
+        const DB = {
+            // Inicializar dados
+            init: function() {
+                // Consultas
+                if (!localStorage.getItem('consultas')) {
+                    const consultas = [
+                        { id: 1, nome: "Consulta Clínica Geral", preco: 150.00, descricao: "Avaliação geral de saúde com médico clínico geral" },
+                        { id: 2, nome: "Consulta Cardiologia", preco: 250.00, descricao: "Avaliação especializada com cardiologista" },
+                        { id: 3, nome: "Consulta Dermatologia", preco: 200.00, descricao: "Avaliação e tratamento de condições da pele" }
+                    ];
+                    localStorage.setItem('consultas', JSON.stringify(consultas));
+                }
+                
+                // Exames
+                if (!localStorage.getItem('exames')) {
+                    const exames = [
+                        { id: 1, nome: "Hemograma Completo", preco: 80.00, descricao: "Avaliação de células sanguíneas" },
+                        { id: 2, nome: "Eletrocardiograma", preco: 120.00, descricao: "Registro da atividade elétrica do coração" },
+                        { id: 3, nome: "Raio-X Torácico", preco: 150.00, descricao: "Imagem radiográfica do tórax" }
+                    ];
+                    localStorage.setItem('exames', JSON.stringify(exames));
+                }
+                
+                // Procedimentos
+                if (!localStorage.getItem('procedimentos')) {
+                    const procedimentos = [
+                        { 
+                            id: 1, 
+                            nome: "Hemograma Completo", 
+                            descricao: "O hemograma completo é um exame de sangue que avalia as células sanguíneas, incluindo glóbulos vermelhos, glóbulos brancos e plaquetas. Este exame é fundamental para diagnosticar condições como anemia, infecções e distúrbios de coagulação.",
+                            passos: [
+                                "Coleta de sangue venoso, geralmente da dobra do cotovelo",
+                                "O sangue é coletado em um tubo com anticoagulante",
+                                "A amostra é analisada em equipamento automatizado",
+                                "Resultados são emitidos em 24 horas"
+                            ]
+                        },
+                        { 
+                            id: 2, 
+                            nome: "Eletrocardiograma", 
+                            descricao: "O eletrocardiograma (ECG) é um exame que registra a atividade elétrica do coração. É utilizado para diagnosticar arritmias cardíacas, infarto do miocárdio, problemas nas válvulas cardíacas e outras condições cardiovasculares.",
+                            passos: [
+                                "O paciente deita-se em uma maca com o tórax exposto",
+                                "Eletrodos são colocados em pontos específicos do corpo",
+                                "O equipamento registra a atividade elétrica por 5-10 minutos",
+                                "O cardiologista interpreta os resultados"
+                            ]
+                        }
+                    ];
+                    localStorage.setItem('procedimentos', JSON.stringify(procedimentos));
+                }
+                
+                // Agendamentos
+                if (!localStorage.getItem('agendamentos')) {
+                    localStorage.setItem('agendamentos', JSON.stringify([]));
+                }
+            },
+            
+            // Obter dados
+            getConsultas: function() {
+                return JSON.parse(localStorage.getItem('consultas')) || [];
+            },
+            
+            getExames: function() {
+                return JSON.parse(localStorage.getItem('exames')) || [];
+            },
+            
+            getProcedimentos: function() {
+                return JSON.parse(localStorage.getItem('procedimentos')) || [];
+            },
+            
+            getAgendamentos: function() {
+                return JSON.parse(localStorage.getItem('agendamentos')) || [];
+            },
+            
+            // Salvar dados
+            saveConsultas: function(consultas) {
+                localStorage.setItem('consultas', JSON.stringify(consultas));
+            },
+            
+            saveExames: function(exames) {
+                localStorage.setItem('exames', JSON.stringify(exames));
+            },
+            
+            saveProcedimentos: function(procedimentos) {
+                localStorage.setItem('procedimentos', JSON.stringify(procedimentos));
+            },
+            
+            saveAgendamentos: function(agendamentos) {
+                localStorage.setItem('agendamentos', JSON.stringify(agendamentos));
+            }
+        };
+
+        // Inicializar banco de dados
+        DB.init();
+
+        // Elementos do DOM
+        const loginModal = document.getElementById('login-modal');
+        const loginBtn = document.getElementById('login-btn');
+        const closeModal = document.getElementById('close-modal');
+        const userDropdown = document.getElementById('user-dropdown');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authForms = document.querySelectorAll('.auth-form');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const navLinks = document.querySelectorAll('nav a');
+        const sections = document.querySelectorAll('section');
+        const mobileToggle = document.querySelector('.mobile-toggle');
+        const navMenu = document.querySelector('nav ul');
+        const userBtn = document.querySelector('.user-btn');
+        const procedimentoSelect = document.getElementById('procedimento-select');
+        const explicacaoContent = document.getElementById('explicacao-content');
+        const consultaSelect = document.getElementById('consulta');
+        const priceDisplay = document.getElementById('price-display');
+        const precoSpan = document.getElementById('preco');
+        const agendamentoForm = document.getElementById('agendamento-form');
+        const adminNavItem = document.getElementById('admin-nav-item');
+        const adminTabs = document.querySelectorAll('.admin-tab');
+        const adminContents = document.querySelectorAll('.admin-content');
+        const consultasContainer = document.getElementById('consultas-container');
+        const examesContainer = document.getElementById('exames-container');
+        const agendamentosTable = document.getElementById('agendamentos-table');
+        const consultasAdminTable = document.getElementById('consultas-admin-table');
+        const examesAdminTable = document.getElementById('exames-admin-table');
+        const procedimentosAdminTable = document.getElementById('procedimentos-admin-table');
+        const salvarConsultaBtn = document.getElementById('salvar-consulta');
+        const salvarExameBtn = document.getElementById('salvar-exame');
+        const salvarProcedimentoBtn = document.getElementById('salvar-procedimento');
+        const searchBtn = document.getElementById('search-btn');
+
+        // Usuário padrão
+        const usuarioPadrao = {
+            email: "eurodmiro@gmail.com",
+            senha: "1234",
+            nome: "Euro"
+        };
+
+        // Abrir modal de login
+        loginBtn.addEventListener('click', () => {
+            loginModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Fechar modal
+        closeModal.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+                loginModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Alternar entre login e cadastro
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Atualizar tabs
+                authTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Atualizar forms
+                authForms.forEach(form => form.classList.remove('active'));
+                document.getElementById(`${tabId}-form`).classList.add('active');
+            });
+        });
+
+        // Processar login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-password').value;
+            
+            // Verificar credenciais
+            if (email === usuarioPadrao.email && senha === usuarioPadrao.senha) {
+                userBtn.innerHTML = `<i class="fas fa-user-circle"></i> <span>${usuarioPadrao.nome}</span>`;
+                loginModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                
+                // Mostrar item de administração
+                adminNavItem.style.display = 'block';
+                
+                alert('Login realizado com sucesso!');
+            } else {
+                alert('E-mail ou senha incorretos');
+            }
+        });
+
+        // Processar cadastro
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const senha = document.getElementById('register-password').value;
+            const confirmacao = document.getElementById('register-confirm').value;
+            
+            if (senha !== confirmacao) {
+                alert('As senhas não coincidem');
+                return;
+            }
+            
+            // Simular cadastro bem-sucedido
+            userBtn.innerHTML = `<i class="fas fa-user-circle"></i> <span>${nome.split(' ')[0]}</span>`;
+            loginModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Mostrar item de administração
+            adminNavItem.style.display = 'block';
+            
+            alert('Cadastro realizado com sucesso! Você está logado.');
+        });
+
+        // Processar logout
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            userBtn.innerHTML = `<i class="fas fa-user-circle"></i> <span>Login</span>`;
+            userDropdown.classList.remove('show');
+            
+            // Esconder item de administração
+            adminNavItem.style.display = 'none';
+            
+            alert('Você saiu do sistema.');
+        });
+
+        // Mostrar/ocultar dropdown do usuário
+        userBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Navegação entre seções
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Atualiza menu ativo
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Esconde menu mobile após seleção
+                navMenu.classList.remove('show');
+                
+                // Mostra a seção selecionada
+                const targetSection = link.getAttribute('data-section');
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === targetSection) {
+                        section.classList.add('active');
+                    }
+                });
+                
+                // Se for a seção de admin, carregar dados
+                if (targetSection === 'admin') {
+                    carregarAgendamentosAdmin();
+                    carregarConsultasAdmin();
+                    carregarExamesAdmin();
+                    carregarProcedimentosAdmin();
+                }
+                
+                // Scroll para o topo da seção
+                document.getElementById(targetSection).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Menu responsivo
+        mobileToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('show');
+        });
+
+        // Carregar consultas para a seção principal
+        function carregarConsultas() {
+            consultasContainer.innerHTML = '';
+            const consultas = DB.getConsultas();
+            
+            consultas.forEach(consulta => {
+                const card = document.createElement('div');
+                card.className = 'service-card';
+                card.innerHTML = `
+                    <div class="service-img">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>${consulta.nome}</h3>
+                        <p>${consulta.descricao}</p>
+                        <div class="price">R$ ${consulta.preco.toFixed(2)}</div>
+                    </div>
+                `;
+                consultasContainer.appendChild(card);
+            });
+        }
+
+        // Carregar exames para a seção principal
+        function carregarExames() {
+            examesContainer.innerHTML = '';
+            const exames = DB.getExames();
+            
+            exames.forEach(exame => {
+                const card = document.createElement('div');
+                card.className = 'service-card';
+                card.innerHTML = `
+                    <div class="service-img">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>${exame.nome}</h3>
+                        <p>${exame.descricao}</p>
+                        <div class="price">R$ ${exame.preco.toFixed(2)}</div>
+                    </div>
+                `;
+                examesContainer.appendChild(card);
+            });
+        }
+
+        // Carregar procedimentos para a seção principal
+        function carregarProcedimentos() {
+            procedimentoSelect.innerHTML = '<option value="">Selecione um procedimento</option>';
+            const procedimentos = DB.getProcedimentos();
+            
+            procedimentos.forEach(proc => {
+                const option = document.createElement('option');
+                option.value = proc.id;
+                option.textContent = proc.nome;
+                procedimentoSelect.appendChild(option);
+            });
+        }
+
+        // Carregar consultas para o formulário de agendamento
+        function carregarConsultasAgendamento() {
+            consultaSelect.innerHTML = '<option value="">Selecione uma consulta</option>';
+            const consultas = DB.getConsultas();
+            
+            consultas.forEach(consulta => {
+                const option = document.createElement('option');
+                option.value = consulta.id;
+                option.textContent = `${consulta.nome} (R$ ${consulta.preco.toFixed(2)})`;
+                consultaSelect.appendChild(option);
+            });
+        }
+
+        // Exibir explicação do procedimento
+        procedimentoSelect.addEventListener('change', () => {
+            const selectedId = parseInt(procedimentoSelect.value);
+            if (selectedId) {
+                const procedimentos = DB.getProcedimentos();
+                const procedimento = procedimentos.find(p => p.id === selectedId);
+                
+                if (procedimento) {
+                    let passosHTML = '';
+                    procedimento.passos.forEach((passo, index) => {
+                        passosHTML += `<p>${index + 1}. ${passo}</p>`;
+                    });
+                    
+                    explicacaoContent.innerHTML = `
+                        <h3>${procedimento.nome}</h3>
+                        <p>${procedimento.descricao}</p>
+                        <h4>Passos do Procedimento:</h4>
+                        ${passosHTML}
+                        <div class="explicacao-imagens">
+                            <img src="https://images.unsplash.com/photo-1516549655169-df83a0774514?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Imagem ilustrativa">
+                            <img src="https://images.unsplash.com/photo-1581595219319-5cb5d7f2acd4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Imagem ilustrativa">
+                        </div>
+                    `;
+                }
+            } else {
+                explicacaoContent.innerHTML = `<p>Selecione um procedimento acima para visualizar sua explicação.</p>`;
+            }
+        });
+
+        // Atualizar preço ao selecionar consulta
+        consultaSelect.addEventListener('change', () => {
+            const selectedId = parseInt(consultaSelect.value);
+            if (selectedId) {
+                const consultas = DB.getConsultas();
+                const consulta = consultas.find(c => c.id === selectedId);
+                
+                if (consulta) {
+                    priceDisplay.style.display = 'block';
+                    precoSpan.textContent = consulta.preco.toFixed(2);
+                }
+            } else {
+                priceDisplay.style.display = 'none';
+            }
+        });
+
+        // Simular agendamento
+        agendamentoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const consultaId = parseInt(consultaSelect.value);
+            if (!consultaId) {
+                alert('Por favor, selecione uma consulta.');
+                return;
+            }
+            
+            const consultas = DB.getConsultas();
+            const consulta = consultas.find(c => c.id === consultaId);
+            
+            if (!consulta) {
+                alert('Consulta não encontrada.');
+                return;
+            }
+            
+            // Coletar dados do formulário
+            const agendamento = {
+                id: Date.now(),
+                nome: document.getElementById('nome').value,
+                telefone: document.getElementById('telefone').value,
+                consulta: consulta.nome,
+                preco: consulta.preco,
+                data: document.getElementById('data').value,
+                hora: document.getElementById('hora').value,
+                status: 'pendente',
+                dataAgendamento: new Date().toISOString()
+            };
+            
+            // Salvar agendamento
+            const agendamentos = DB.getAgendamentos();
+            agendamentos.push(agendamento);
+            DB.saveAgendamentos(agendamentos);
+            
+            // Resetar formulário
+            agendamentoForm.reset();
+            priceDisplay.style.display = 'none';
+            
+            alert('Agendamento realizado com sucesso!');
+        });
+
+        // Carregar agendamentos para admin
+        function carregarAgendamentosAdmin() {
+            agendamentosTable.innerHTML = '';
+            const agendamentos = DB.getAgendamentos();
+            
+            if (agendamentos.length === 0) {
+                agendamentosTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px;">
+                            Nenhum agendamento encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            agendamentos.forEach(ag => {
+                const row = document.createElement('tr');
+                
+                // Formatar status
+                let statusClass = 'status-pendente';
+                if (ag.status === 'confirmado') statusClass = 'status-confirmado';
+                if (ag.status === 'cancelado') statusClass = 'status-cancelado';
+                
+                row.innerHTML = `
+                    <td>${ag.nome}</td>
+                    <td>${ag.telefone}</td>
+                    <td>${ag.consulta}</td>
+                    <td>${ag.data}</td>
+                    <td>${ag.hora}</td>
+                    <td><span class="status ${statusClass}">${ag.status}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${ag.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${ag.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                agendamentosTable.appendChild(row);
+            });
+        }
+
+        // Carregar consultas para admin
+        function carregarConsultasAdmin() {
+            consultasAdminTable.innerHTML = '';
+            const consultas = DB.getConsultas();
+            
+            consultas.forEach(consulta => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${consulta.nome}</td>
+                    <td>${consulta.preco.toFixed(2)}</td>
+                    <td>${consulta.descricao}</td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${consulta.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${consulta.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                consultasAdminTable.appendChild(row);
+            });
+        }
+
+        // Carregar exames para admin
+        function carregarExamesAdmin() {
+            examesAdminTable.innerHTML = '';
+            const exames = DB.getExames();
+            
+            exames.forEach(exame => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${exame.nome}</td>
+                    <td>${exame.preco.toFixed(2)}</td>
+                    <td>${exame.descricao}</td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${exame.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${exame.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                examesAdminTable.appendChild(row);
+            });
+        }
+
+        // Carregar procedimentos para admin
+        function carregarProcedimentosAdmin() {
+            procedimentosAdminTable.innerHTML = '';
+            const procedimentos = DB.getProcedimentos();
+            
+            procedimentos.forEach(proc => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${proc.nome}</td>
+                    <td>${proc.descricao.substring(0, 100)}...</td>
+                    <td>${proc.passos.length} passos</td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${proc.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${proc.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                procedimentosAdminTable.appendChild(row);
+            });
+        }
+
+        // Salvar consulta
+        salvarConsultaBtn.addEventListener('click', () => {
+            const id = document.getElementById('consulta-id').value;
+            const nome = document.getElementById('consulta-nome').value;
+            const preco = parseFloat(document.getElementById('consulta-preco').value);
+            const descricao = document.getElementById('consulta-desc').value;
+            
+            if (!nome || isNaN(preco)) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            const consultas = DB.getConsultas();
+            
+            if (id) {
+                // Editar consulta existente
+                const index = consultas.findIndex(c => c.id === parseInt(id));
+                if (index !== -1) {
+                    consultas[index] = { id: parseInt(id), nome, preco, descricao };
+                }
+            } else {
+                // Adicionar nova consulta
+                const novaConsulta = {
+                    id: Date.now(),
+                    nome,
+                    preco,
+                    descricao
+                };
+                consultas.push(novaConsulta);
+            }
+            
+            DB.saveConsultas(consultas);
+            carregarConsultasAdmin();
+            carregarConsultas();
+            carregarConsultasAgendamento();
+            
+            // Resetar formulário
+            document.getElementById('consulta-id').value = '';
+            document.getElementById('consulta-nome').value = '';
+            document.getElementById('consulta-preco').value = '';
+            document.getElementById('consulta-desc').value = '';
+            
+            alert('Consulta salva com sucesso!');
+        });
+
+        // Salvar exame
+        salvarExameBtn.addEventListener('click', () => {
+            const id = document.getElementById('exame-id').value;
+            const nome = document.getElementById('exame-nome').value;
+            const preco = parseFloat(document.getElementById('exame-preco').value);
+            const descricao = document.getElementById('exame-desc').value;
+            
+            if (!nome || isNaN(preco)) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            const exames = DB.getExames();
+            
+            if (id) {
+                // Editar exame existente
+                const index = exames.findIndex(e => e.id === parseInt(id));
+                if (index !== -1) {
+                    exames[index] = { id: parseInt(id), nome, preco, descricao };
+                }
+            } else {
+                // Adicionar novo exame
+                const novoExame = {
+                    id: Date.now(),
+                    nome,
+                    preco,
+                    descricao
+                };
+                exames.push(novoExame);
+            }
+            
+            DB.saveExames(exames);
+            carregarExamesAdmin();
+            carregarExames();
+            
+            // Resetar formulário
+            document.getElementById('exame-id').value = '';
+            document.getElementById('exame-nome').value = '';
+            document.getElementById('exame-preco').value = '';
+            document.getElementById('exame-desc').value = '';
+            
+            alert('Exame salvo com sucesso!');
+        });
+
+        // Salvar procedimento
+        salvarProcedimentoBtn.addEventListener('click', () => {
+            const id = document.getElementById('procedimento-id').value;
+            const nome = document.getElementById('procedimento-nome').value;
+            const descricao = document.getElementById('procedimento-desc').value;
+            const passos = document.getElementById('procedimento-passos').value.split('\n').filter(p => p.trim() !== '');
+            
+            if (!nome || !descricao || passos.length === 0) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            const procedimentos = DB.getProcedimentos();
+            
+            if (id) {
+                // Editar procedimento existente
+                const index = procedimentos.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    procedimentos[index] = { id: parseInt(id), nome, descricao, passos };
+                }
+            } else {
+                // Adicionar novo procedimento
+                const novoProcedimento = {
+                    id: Date.now(),
+                    nome,
+                    descricao,
+                    passos
+                };
+                procedimentos.push(novoProcedimento);
+            }
+            
+            DB.saveProcedimentos(procedimentos);
+            carregarProcedimentosAdmin();
+            carregarProcedimentos();
+            
+            // Resetar formulário
+            document.getElementById('procedimento-id').value = '';
+            document.getElementById('procedimento-nome').value = '';
+            document.getElementById('procedimento-desc').value = '';
+            document.getElementById('procedimento-passos').value = '';
+            
+            alert('Procedimento salvo com sucesso!');
+        });
+
+        // Buscar agendamentos
+        searchBtn.addEventListener('click', () => {
+            const termo = document.getElementById('search-input').value.toLowerCase();
+            const status = document.getElementById('status-filter').value;
+            
+            const agendamentos = DB.getAgendamentos();
+            
+            // Filtrar resultados
+            const resultados = agendamentos.filter(ag => {
+                const matchTermo = ag.nome.toLowerCase().includes(termo) || 
+                                  ag.telefone.includes(termo) || 
+                                  ag.data.includes(termo);
+                
+                const matchStatus = status === 'todos' || ag.status === status;
+                
+                return matchTermo && matchStatus;
+            });
+            
+            // Atualizar tabela
+            agendamentosTable.innerHTML = '';
+            
+            if (resultados.length === 0) {
+                agendamentosTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px;">
+                            Nenhum agendamento encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            resultados.forEach(ag => {
+                const row = document.createElement('tr');
+                
+                // Formatar status
+                let statusClass = 'status-pendente';
+                if (ag.status === 'confirmado') statusClass = 'status-confirmado';
+                if (ag.status === 'cancelado') statusClass = 'status-cancelado';
+                
+                row.innerHTML = `
+                    <td>${ag.nome}</td>
+                    <td>${ag.telefone}</td>
+                    <td>${ag.consulta}</td>
+                    <td>${ag.data}</td>
+                    <td>${ag.hora}</td>
+                    <td><span class="status ${statusClass}">${ag.status}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${ag.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${ag.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                agendamentosTable.appendChild(row);
+            });
+        });
+
+        // Navegação no painel administrativo
+        adminTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                adminTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                adminContents.forEach(content => content.classList.remove('active'));
+                
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-content`).classList.add('active');
+            });
+        });
+
+        // Inicializar campos de data
+        const hoje = new Date();
+        const amanha = new Date();
+        amanha.setDate(amanha.getDate() + 1);
+        
+        document.getElementById('data').min = amanha.toISOString().split('T')[0];
+        document.getElementById('nascimento').max = new Date().toISOString().split('T')[0];
+        
+        // Preencher o campo de email com o usuário padrão
+        document.getElementById('login-email').value = usuarioPadrao.email;
+        
+        // Carregar dados iniciais
+        carregarConsultas();
+        carregarExames();
+        carregarProcedimentos();
+        carregarConsultasAgendamento();
+    </script>
+</body>
+</html>
